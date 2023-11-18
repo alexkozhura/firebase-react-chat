@@ -114,7 +114,7 @@ html, body {
         }
 
         .sidebar{
-            flex: 1;
+            flex: 0 0 33.333%;
             background-color: #3e3c61;
             position: relative;
 
@@ -144,7 +144,7 @@ html, body {
                         width: 24px;
                         border-radius: 50%;
                         // To crop the image properly
-                        object-fit: cover;
+                        // object-fit: cover;
                     }
 
                     button {
@@ -212,13 +212,18 @@ html, body {
                     }
                     p{
                         font-size: 14px;
-                        color: lightgray
+                        color: lightgray;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        max-width: 150px;
+
                     }
                 }
             }
         }
         .chat{
-            flex: 2;
+            flex: 0 0 66.666%;
 
             .chatInfo {
                 height: 50px;
@@ -252,6 +257,7 @@ html, body {
                         color: gray;
                         font-weight: 300;
                         margin-bottom: 20px;
+                        font-size: 0.8em;
 
                         img {
                             width: 40px;
@@ -282,8 +288,13 @@ html, body {
 
                         }
                     }
+                    // to change the positioning of owner's messages
                     &.owner {
                         flex-direction: row-reverse;
+
+                        .messageInfo {
+                            align-items: flex-end;
+                        }
 
                         .messageContent {
                             align-items: flex-end;

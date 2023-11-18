@@ -15,7 +15,12 @@ const Input = () => {
   const {data} = useContext(ChatContext);
 
   const handleSend = async () => {
-    const messageText = text;
+    const trimmedText = text.trim();
+
+    if (!trimmedText && !img) {
+      console.log('Nothing to send');
+      return;
+    }
     setText('');
     setImg(null);
     if(img) {
@@ -37,7 +42,7 @@ const Input = () => {
               await updateDoc(doc(db, 'chats', data.chatId), {
                 messages: arrayUnion({
                   id: uuid(),
-                  text: messageText,
+                  text: trimmedText,
                   senderId: currentUser.uid,
                   date: Timestamp.now(),
                   img: downloadURL
@@ -50,7 +55,7 @@ const Input = () => {
       await updateDoc(doc(db, 'chats', data.chatId), {
         messages: arrayUnion({
           id: uuid(),
-          text: messageText,
+          text: trimmedText,
           senderId: currentUser.uid,
           date: Timestamp.now()
         })

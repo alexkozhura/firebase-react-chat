@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, storage, db } from '../firebase';
 import { IoPersonAddOutline } from 'react-icons/io5';
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { doc, setDoc } from "firebase/firestore";  // for adding user to firestore
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, setDoc } from "firebase/firestore";  // for adding user to firestore database
 import { useNavigate, Link } from 'react-router-dom';
 
 
@@ -23,34 +23,25 @@ const Register = () => {
             // displayName will be the name of the image file
             const storageRef = ref(storage, displayName);
 
-            const uploadTask = uploadBytesResumable(storageRef, avatar);  // use avatar here
+            const uploadTaskSnapshot = await uploadBytes(storageRef, avatar);  // use avatar here
+            const downloadURL = await getDownloadURL(uploadTaskSnapshot.ref);
 
-            uploadTask.on( 
-                (error) => {
-                    // Handle unsuccessful uploads
-                    console.log('Error uploading file')
-                    setErr(true);
-                }, 
-                () => {
-                    // Handle successful uploads on complete
-                    getDownloadURL(uploadTask.snapshot.ref).then(async(downloadURL) => {
-                        await updateProfile(res.user, {
-                            displayName,
-                            photoURL: downloadURL
-                        });
-                        // add user to firestore (uid = unique user id)
-                        await setDoc(doc(db, "users", res.user.uid), {
-                            uid: res.user.uid,
-                            displayName,
-                            email,
-                            photoURL: downloadURL
-                        });
+            await updateProfile(res.user, {
+                    displayName,
+                    photoURL: downloadURL
+                })
+            
+            // add user to firestore (uid = unique user id)
+            await setDoc(doc(db, "users", res.user.uid), {
+                uid: res.user.uid,
+                displayName,
+                email,
+                photoURL: downloadURL
+            })
 
-                        await setDoc(doc(db, "userChats", res.user.uid), {});
-                        navigate('/');
-                    });
-                }
-            );
+            await setDoc(doc(db, "userChats", res.user.uid), {})
+            
+            navigate('/');
         } catch (err) {
             console.log(err);
             setErr(true);
