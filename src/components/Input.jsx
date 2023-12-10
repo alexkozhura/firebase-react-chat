@@ -1,18 +1,19 @@
-import React, { useState, useContext } from 'react'
+import React, { useState } from 'react'
 import { IoImageOutline, IoDocumentAttachOutline } from 'react-icons/io5'
-import { ChatContext } from '../context/ChatContext';
-import { AuthContext } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { updateDoc, doc, arrayUnion, Timestamp, serverTimestamp } from 'firebase/firestore';
+// library that we use to generate unique ids for messages
 import { v4 as uuid } from 'uuid';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { useAuth } from '../hooks/useAuth';
+import { useChat } from '../hooks/useChat';
 
 const Input = () => {
   const [text, setText] = useState('');
   const [img, setImg] = useState(null);
 
-  const {currentUser} = useContext(AuthContext);
-  const {data} = useContext(ChatContext);
+  const {currentUser} = useAuth();
+  const {data} = useChat();
 
   const handleSend = async () => {
     const trimmedText = text.trim();
@@ -21,65 +22,62 @@ const Input = () => {
       console.log('Nothing to send');
       return;
     }
-    setText('');
-    setImg(null);
-    if(img) {
-      // upload image to firebase storage
-      // get the url of the image
-      // send the url to the database
+    
+    // create a message object
+    let message = {
+      id: uuid(),
+      senderId: currentUser.uid,
+      date: Timestamp.now()
+    };
+
+    // Add text to the trimmed message if it exists
+    if (trimmedText) {
+      message.text = trimmedText;
+    }
+
+    // Add image to the message if it exists
+    if (img) {
       const storageRef = ref(storage, uuid());
       const uploadTask = uploadBytesResumable(storageRef, img);
 
-      uploadTask.on( 
-        (error) => {
-            // Handle unsuccessful uploads
-            console.log('Error uploading file')
-            setErr(true);
-        }, 
-        () => {
-            // Handle successful uploads on complete
-            getDownloadURL(uploadTask.snapshot.ref).then(async(downloadURL) => {
-              await updateDoc(doc(db, 'chats', data.chatId), {
-                messages: arrayUnion({
-                  id: uuid(),
-                  text: trimmedText,
-                  senderId: currentUser.uid,
-                  date: Timestamp.now(),
-                  img: downloadURL
-                }),
-              });
-        });
-      }
-    );
-    } else {
-      await updateDoc(doc(db, 'chats', data.chatId), {
-        messages: arrayUnion({
-          id: uuid(),
-          text: trimmedText,
-          senderId: currentUser.uid,
-          date: Timestamp.now()
-        })
-      });
+      await new Promise((resolve, reject) => {
+        uploadTask.on(
+          (error) => {
+            console.log('Error uploading file');
+            reject(error);
+          },
+          () => {
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              message.img = downloadURL;
+              resolve();
+            })
+          }
+        )
+      })
     }
 
+    // Send the message
+    await updateDoc(doc(db, 'chats', data.chatId), {
+      messages: arrayUnion(message)
+    });
+
+    // Update the userChats collection
+    const lastMessageContent = img ? '[Image]' : trimmedText;
     await updateDoc(doc(db, 'userChats', currentUser.uid), {
-      // we're updating a nested object in the userChats collection
       [data.chatId + '.lastMessage']: {
-        text
+        text: lastMessageContent
       },
       [data.chatId + '.date']: serverTimestamp(),
     });
-
     await updateDoc(doc(db, 'userChats', data.user.uid), {
       [data.chatId + '.lastMessage']: {
-        text
+        text: lastMessageContent
       },
       [data.chatId + '.date']: serverTimestamp(),
     });
+    setText('');
+    setImg(null);
 
-    // clear the input
-    // setText('');
-    // setImg(null);
   };
   return (
     <div className='input'>

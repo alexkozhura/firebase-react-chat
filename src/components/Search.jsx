@@ -1,18 +1,28 @@
-import React, { useState, useContext } from 'react'
+import React, { useState } from 'react'
 import { collection, query, where, getDocs, getDoc, serverTimestamp, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { AuthContext } from '../context/AuthContext';
-import { ChatContext } from '../context/ChatContext';
+import { useAuth } from '../hooks/useAuth';
+import { useChat } from '../hooks/useChat';
+
 
 const Search = () => {
+  // the user we're looking for
   const [username, setUsername] = useState('');
+  // holds the data of the found user
   const [user, setUser] = useState(null);
   const [err, setErr] = useState(false);
 
-  const {currentUser} = useContext(AuthContext); 
-  const {dispatch} = useContext(ChatContext);
+  const {currentUser} = useAuth(); 
+  const {dispatch} = useChat();
 
   const handleSearch = async () => {
+    // check if user exists and it's not the current user
+    if (username.trim() === '' || username.trim() == currentUser.displayName) {
+      setErr(true);
+      setUser(null);
+      return;
+    }
+
     const q = query(
       collection(db, 'users'), 
       where('displayName', '==', username));
@@ -59,6 +69,7 @@ const Search = () => {
 
         // create user chats
         await updateDoc(doc(db, 'userChats', currentUser.uid), {
+          // that's how you updated nested objects in Firebase
           [combinedId + '.userInfo']: {
             uid: user.uid,
             displayName: user.displayName,
@@ -67,6 +78,7 @@ const Search = () => {
           [combinedId + '.date']: serverTimestamp()
         });
 
+        // we do the same thing for the user who receives the message
         await updateDoc(doc(db, 'userChats', user.uid), {
           [combinedId + '.userInfo']: {
             uid: currentUser.uid,

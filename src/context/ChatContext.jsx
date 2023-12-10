@@ -11,10 +11,9 @@ export const ChatContext = createContext();
 export const ChatContextProvider = ({ children }) => { 
     const {currentUser} = useContext(AuthContext);
     // we'll use useReducer here instead of useState because we have a complex state
-    {
-        const INITIAL_STATE = {
-            chatId: 'null',
-            user: {}
+    const INITIAL_STATE = {
+        chatId: 'null',
+        user: {}
     }
 
     const chatReducer = (state, action) => {
@@ -42,5 +41,4 @@ export const ChatContextProvider = ({ children }) => {
             { children }
         </ChatContext.Provider>
     );
-    }
 }

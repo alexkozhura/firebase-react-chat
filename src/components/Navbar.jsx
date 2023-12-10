@@ -1,11 +1,10 @@
 import React from 'react'
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
-import { AuthContext } from '../context/AuthContext';
-import { useContext } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 const Navbar = () => {
-  const {currentUser} = useContext(AuthContext);
+  const {currentUser} = useAuth();
 
   return (
     <div className='navbar'>

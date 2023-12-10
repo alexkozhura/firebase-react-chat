@@ -8,11 +8,10 @@ import {
   Route,
   Navigate
 } from 'react-router-dom';
-import { AuthContext } from './context/AuthContext';
-import { useContext } from 'react';
+import { useAuth } from './hooks/useAuth'
 
 function App() {
-  const {currentUser} = useContext(AuthContext);
+  const {currentUser} = useAuth();
 
   const ProtectedRoute = ({ children }) => {
     if(!currentUser) {

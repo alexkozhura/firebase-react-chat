@@ -1,20 +1,22 @@
 import React from 'react';
-import { useContext, useEffect, useRef } from 'react';
-import { AuthContext } from '../context/AuthContext';
-import { ChatContext } from '../context/ChatContext';
+import { useEffect, useRef } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { useAuth } from '../hooks/useAuth';
+import { useChat } from '../hooks/useChat';
 
 const Message = ({message}) => {
   // To get the current user
-  const { currentUser } = useContext(AuthContext);
+  const { currentUser } = useAuth();
   // To get the chat id and the user
-  const { data } = useContext(ChatContext);
+  const { data } = useChat();
   // To check if the message is from the current user to style it correctly
   const isOwner = message.senderId === currentUser.uid;
+
+  const timeSinceSent = formatDistanceToNow(message.date.toDate());
+
   // Assign a ref to the chat container
   const messagesEndRef = useRef(null);
 
-  const timeSinceSent = formatDistanceToNow(message.date.toDate());
 
   useEffect(() => {
     // Scroll to the bottom of the chat container
@@ -34,7 +36,7 @@ const Message = ({message}) => {
         <span>{timeSinceSent} ago</span>
       </div>
       <div className='messageContent'>
-        <p>{message.text}</p>
+        {message.text && <p>{message.text}</p>}
         {message.img && <img src={message.img} alt='' />}
       </div>
     </div>

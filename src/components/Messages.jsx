@@ -1,13 +1,13 @@
 import React from 'react'
 import Message from './Message.jsx'
-import { useContext, useState, useEffect } from 'react';
-import { ChatContext } from '../context/ChatContext';
+import { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { onSnapshot, doc } from 'firebase/firestore';
+import { useChat } from '../hooks/useChat.js';
 
 const Messages = () => {
   const [messages, setMessages] = useState([]);
-  const { data } = useContext(ChatContext);
+  const { data } = useChat();
 
   useEffect(() => {
     // we're going to pass 'combinedId' from 'data'

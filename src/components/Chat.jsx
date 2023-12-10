@@ -1,12 +1,12 @@
 // The component for the chat section of the app
-import React, { useContext } from 'react';
+import React from 'react';
 import { IoVideocamOutline, IoPersonAddOutline, IoEllipsisHorizontalOutline } from 'react-icons/io5';
 import Messages from './Messages';
 import Input from './Input';
-import { ChatContext } from '../context/ChatContext';
+import { useChat } from '../hooks/useChat';
 
 const Chat = () => {
-  const { data } = useContext(ChatContext);
+  const { data } = useChat();
 
   return (
     <div className='chat'>

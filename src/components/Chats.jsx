@@ -1,22 +1,28 @@
 // The component for the chats section of the app
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { db } from '../firebase';
 import { onSnapshot, doc } from 'firebase/firestore';
-import { AuthContext } from '../context/AuthContext';
-import { ChatContext } from '../context/ChatContext';
+import { useAuth } from '../hooks/useAuth'
+import { useChat } from '../hooks/useChat';
 
 const Chats = () => {
   // use useState to manage a state variable chats which will hold the chat data.
   const [chats, setChats] = useState({});
 
-  const {currentUser} = useContext(AuthContext);
-  const {dispatch} = useContext(ChatContext);
+  const {currentUser} = useAuth();
+  const {dispatch} = useChat();
 
   // set up a listener on the userChats document in Firestore to get the chat data
   useEffect(() => {
     const getChats = () => {
       const unsub = onSnapshot(doc(db, 'userChats', currentUser.uid), (doc) => {
-        setChats(doc.data());
+        const data = doc.data();
+        if (data) {
+          setChats(data);
+        }
+        else {
+          setChats({});
+        }
       });
       
       // we need to clean up the listener when the component unmounts
